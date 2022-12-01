@@ -12,8 +12,101 @@ using namespace std;
 typedef double d2d(double);
 
 
+namespace task1
+{
+    bool brackets_check_a(long long n, const char* s) {
+        int sum1 = 0;
+        int sum2 = 0;
+        int min1 = 0;
+        int min2 = 0;
 
-namespace task2_1
+    #pragma omp parallel sections
+        {
+    #pragma omp section
+            {
+                for (int i = 0; i < n/2; i++)
+                {
+                    sum1 += s[i] == '(' ? 1 : -1;
+                    if (sum1 < min1)
+                        min1 = sum1;
+                }
+            }
+    #pragma omp section
+            {
+                for (int i = n/2; i < n; i++)
+                {
+                    sum2 += s[i] == '(' ? 1 : -1;
+                    if (sum2 < min2)
+                        min2 = sum2;
+                }
+            }
+        }
+
+        if (min1 < 0)
+            return false;
+        if (min2 + sum1 < 0)
+            return false;
+        if (sum1 + sum2 != 0)
+            return false;
+
+        return true;
+    }
+
+    bool brackets_check_b(long long n, const char* s) {
+        int sum1 = 0;
+        int sum2 = 0;
+        int sum3 = 0;
+        int min1 = 0;
+        int min2 = 0;
+        int min3 = 0;
+
+    #pragma omp parallel sections
+        {
+    #pragma omp section
+            {
+                for (int i = 0; i < n/3; i++)
+                {
+                    sum1 += s[i] == '(' ? 1 : -1;
+                    if (sum1 < min1)
+                        min1 = sum1;
+                }
+            }
+    #pragma omp section
+            {
+                for (int i = n/3; i < (n*2)/3; i++)
+                {
+                    sum2 += s[i] == '(' ? 1 : -1;
+                    if (sum2 < min2)
+                        min2 = sum2;
+                }
+            }
+    #pragma omp section
+            {
+                for (int i = (n * 2) / 3; i < n; i++)
+                {
+                    sum3 += s[i] == '(' ? 1 : -1;
+                    if (sum3 < min3)
+                        min3 = sum3;
+                }
+            }
+        }
+
+        if (min1 < 0)
+            return false;
+        if (min2 + sum1 < 0)
+            return false;
+        if (min3 + sum1 + sum2 < 0)
+            return false;
+        if (sum1 + sum2 + sum3 != 0)
+            return false;
+
+
+        //cout << "Time: " << omp_get_wtime() - t << endl;
+        return true;
+    }
+}
+
+namespace task2
 {
 	double f(double x)
 	{
@@ -156,66 +249,81 @@ namespace task3
 
 int main()
 {
-	/*task1_2(1e5);*/
-
-	//std::string s = "()()()()(())()()";
-	//cout << ((task1_6(s.size(), s.c_str())) ? "correct\n" : "wrong\n");
-
-	#pragma omp parallel
-	{
-		#pragma omp single
-		{
-		    // task 2.1
-			//cout << task2_1::integral(0, 5, task2_1::f) << "\n";
-
-			// task 2.2
-			//std::vector<int> vec;
-			//for (int i = 0; i < 25; ++i)
-            //    vec.push_back(rand()%100);
-            //for (auto e : vec)
-			//{
-			//	cout << e << " ";
-			//}
-			//task2_1::quick_sort(vec.begin(), vec.end());
-            //cout << "\n";
-			//for (auto e : vec)
-			//{
-			//	cout << e << " ";
-			//}
-
-
-		}
-	}
-
-	//task 3
-    task3::Matrix m(4,3);
-    m.data[0][0] = 1; m.data[0][1] = 2; m.data[0][2] = 3; m.data[0][3] = 1;
-    m.data[1][0] = 2; m.data[1][1] = 1; m.data[1][2] = 1; m.data[1][3] = 1;
-    m.data[2][0] = 7; m.data[2][1] = 0; m.data[2][2] = 1; m.data[2][3] = 1;
-
-    m.print();
-
-    m.transform_();
-
-    cout << "\n";
-    m.print();
-
-    int l = 900;
-    m = task3::Matrix(l + 1, l);
-    for (int y = 0; y < l; ++y)
+    cout << "Task 1 - Bracket sequences\n";
+    cout << "Task 2 - Adaptive quadrature and quick sort\n";
+    cout << "Task 3 - System of linear equations\n";
+    int n = -1;
+    while (n < 1 || n > 3)
     {
-        for (int x = 0; x < l+1; ++x)
-        {
-            m.data[y][x] = rand()%1000;
-        }
+        cout << "Enter task number (1-3):";
+        cin >> n;
     }
 
-    //cout << "np " << omp_get_num_threads() << "\n";
+    if (n == 1) {
+        string str = "()()()()(())()()";
+        cout << str << " (2 sections) " << ((task1::brackets_check_a(str.size(), str.c_str())) ? "correct\n" : "wrong\n");
+        cout << str << " (3 sections) " << ((task1::brackets_check_b(str.size(), str.c_str())) ? "correct\n" : "wrong\n");
 
-    auto start = std::chrono::high_resolution_clock::now();
-    m.transform_();
-    auto elapsed = std::chrono::high_resolution_clock::now() - start;
-    long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+        str = "()()()()(()))))(((()()";
+        cout << str << " (2 sections) " << ((task1::brackets_check_a(str.size(), str.c_str())) ? "correct\n" : "wrong\n");
+        cout << str << " (3 sections) " << ((task1::brackets_check_b(str.size(), str.c_str())) ? "correct\n" : "wrong\n");
+    }
+    if (n == 2)
+    {
+        #pragma omp parallel
+        {
+            #pragma omp single
+            {
+                // task 2.1
+                cout << task2::integral(0, 5, task2::f) << "\n";
 
-    cout << microseconds << "microseconds\n";
+                // task 2.2
+                std::vector<int> vec;
+                for (int i = 0; i < 25; ++i)
+                    vec.push_back(rand()%100);
+                for (auto e : vec)
+                {
+                    cout << e << " ";
+                }
+                task2::quick_sort(vec.begin(), vec.end());
+                cout << "\n";
+                for (auto e : vec)
+                {
+                    cout << e << " ";
+                }
+            }
+        }
+    }
+    if (n == 3)
+    {
+        //task 3
+        task3::Matrix m(4,3);
+        m.data[0][0] = 1; m.data[0][1] = 2; m.data[0][2] = 3; m.data[0][3] = 1;
+        m.data[1][0] = 2; m.data[1][1] = 1; m.data[1][2] = 1; m.data[1][3] = 1;
+        m.data[2][0] = 7; m.data[2][1] = 0; m.data[2][2] = 1; m.data[2][3] = 1;
+
+        m.print();
+
+        m.transform_();
+
+        cout << "\n";
+        m.print();
+
+        int l = 900;
+        m = task3::Matrix(l + 1, l);
+        for (int y = 0; y < l; ++y)
+        {
+            for (int x = 0; x < l+1; ++x)
+            {
+                m.data[y][x] = rand()%1000;
+            }
+        }
+
+        auto start = std::chrono::high_resolution_clock::now();
+        m.transform_();
+        auto elapsed = std::chrono::high_resolution_clock::now() - start;
+        long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+
+        cout << "900x900 matrix solved in " << microseconds << " microseconds\n";
+    }
 }
